@@ -6,6 +6,7 @@ import (
 	linkProcessor "main/link-processor"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/go-redis/redis"
@@ -19,7 +20,6 @@ var nsqTopic = "web-crawler"
 var nsqConfig = nsq.NewConfig()
 var nsqChannel = "channel"
 var wg sync.WaitGroup
-var linkProcessLimit int64 = 5
 
 func main() {
 	wg.Add(1)
@@ -70,7 +70,17 @@ func main() {
 		return
 	}
 
-	for i := range 5 {
+	consumerLimit, err := strconv.Atoi(os.Getenv("CONSUMER_LIMIT"))
+	if err != nil {
+		fmt.Println("Consumer limit is not an integer")
+		return
+	}
+	linkProcessLimit, err := strconv.ParseInt(os.Getenv("LINK_LIMIT"), 10, 64) // Parse int to get int64 type
+	if err != nil {
+		fmt.Println("Link Process limit is not an integer")
+		return
+	}
+	for i := range consumerLimit {
 		consumer.AddHandler(&linkProcessor.Handler{
 			Rdb:              rdb,
 			Producer:         producer,
