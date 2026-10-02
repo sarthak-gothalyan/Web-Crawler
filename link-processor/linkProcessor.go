@@ -123,7 +123,7 @@ func (h *Handler) HandleMessage(m *nsq.Message) error {
 		// using a goroutine prevents deadlock since we are calling stop from inside a handler
 		go func() {
 			h.Consumer.Stop()
-			<-h.Consumer.StopChan
+			<-h.Consumer.StopChan // stop the execution until main consumer stop gracefully
 			h.Wg.Done()
 		}()
 	}
